@@ -4,32 +4,29 @@ import ee
 import geemap
 
 
-def gee_init(key_json = None, service_account = None):
+def gee_init(json_key_path = None, service_account = None):
     """
     Authenticate & Initialize the GEE API
-    :param key_json: relative path to GEE API key json file
-    :param service_account: string : service account
+    :param json_key_path :string: path to GEE API key json file
+    :param service_account :string: service account
     """
 
     print('Initializing the Google Earth Engine API...')
-    if key_json is None or service_account is None:
-        try:
-            ee.Initialize()
-            print('Initialized!')
-        except:
-            print('Please authenticate manually...')
-            ee.Authenticate()
-            ee.Initialize()
     try:
         ee.Initialize()
         print('Initialized!')
     except:
-        try:
-            credentials = ee.ServiceAccountCredentials(service_account, key_json)
-            ee.Initialize(credentials)
-            print('Initialized!')
-        except:
-            raise RuntimeError('Unable to initialize Googe Earth Engine API!')
+        if json_key_path is None or service_account is None:
+                print('Please authenticate manually...')
+                ee.Authenticate()
+                ee.Initialize()
+        else:
+            try:
+                credentials = ee.ServiceAccountCredentials(service_account, json_key_path)
+                ee.Initialize(credentials)
+                print('Initialized!')
+            except:
+                raise RuntimeError('Unable to initialize Googe Earth Engine API!')
 
 
 def create_feature_collection(geometries):
@@ -100,10 +97,8 @@ def Image_Processing(image_collection, start_date, end_date, feature_collection 
     if country_name is not None:
         roi = roi_by_country(country_name)
         image = image_col.filterBounds(roi)
-
     elif feature_collection is not None:
         image = image_col.filterBounds(feature_collection)
-
     else:
         raise RuntimeError('At least one of the feature_collection or country_name must be specified!')
 

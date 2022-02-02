@@ -10,9 +10,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import geopandas as gp
 
-# Define a method for displaying Earth Engine image tiles on a folium map.
+
 def add_ee_layer(self, ee_object, vis_params, name):
-    
+
+    """
+    Method for displaying Earth Engine image tiles on a folium map
+    :param: ee_object: image collected from google earth engine api
+    :param: vis_params: dictionary of visual parameters such as image bands, gamma
+    :param: name:
+    """
+
     try:    
         # display ee.Image()
         if isinstance(ee_object, ee.image.Image):    
@@ -60,16 +67,38 @@ def add_ee_layer(self, ee_object, vis_params, name):
 
 
 def reverse_coord(geom_):
+
+    """
+    Method to reverse list of point lat-lon pairs. E.g. [lon, lat] to [lat, lon] or [lat, lon] to [lon, lat]
+    :param: geom_: list of point lat-lon pairs [lon, lat] or [lat, lon]
+    :return: list of point lat-lon pairs
+    """
+
     return [i[::-1] for i in geom_]
 
 
 def save_map_image(map_, path, time_to_render = 5):
+
+    """
+    Method to save folium map as image.
+    :param: map_: Folium map object
+    :param: path: path (must include file name with extension e.g. ./image.png, ./image.jpg) where the image file to be created. 
+    :param: time_to_render: seconds to render the folium map image. Note that low numbers might result in empty images!
+    """
+
     img_data = map_._to_png(time_to_render)
     img = Image.open(io.BytesIO(img_data))
     img.save(path)
 
 
 def get_grid(gdf, number_of_tiles):
+
+    """
+    Method to get the grid of tiles for the area covered by instances of a geodataframe
+    :param: gdf: geopandas geodataframe object 
+    :param: number_of_tiles: approximate number of tiles in each edge of the grid
+    :return: geodataframe of tiles
+    """
 
     print('Creating grid of tiles...')
 
@@ -103,6 +132,12 @@ def get_grid(gdf, number_of_tiles):
 
 def get_polygon_area_km(geom_):
 
+    """
+    Method to get area of polygon in km^2
+    :param: geom_: shapely.geometry Polygon object with projection crs EPSG:4326
+    :return: area of each tile in km^2
+    """
+
     assert geom_.type == 'Polygon', 'Input geometry should be `Polygon`!'
 
     geom_area = ops.transform(
@@ -118,8 +153,8 @@ def get_polygon_area_km(geom_):
         geom_)
 
     # Print the area in km^2
-    print('Area of the polygon is ' + str(np.sqrt(geom_area.area/1000)) + ' km^2')
+    print('Area of the polygon is ' + str(geom_area.area/1000) + ' km^2')
 
-    return geom_area
+    return geom_area.area/1000
 
 

@@ -6,6 +6,12 @@ from shapely.geometry import LineString
 
 
 def osm_to_json(overpass_query):
+
+    """
+    Method to send html request with overpass query to overpass api interpreter
+    :param: overpass_query: string of overpass query in Overpass QL
+    :return: json response of query result
+    """
     overpass_url = "http://overpass-api.de/api/interpreter"
 
     r = requests.get(overpass_url, params={'data': overpass_query})
@@ -18,6 +24,13 @@ def osm_to_json(overpass_query):
 
 
 def country_ways_query(highway_types, country_code):
+
+    """
+    Method to generate overpass query to get the linestrings of highways (highway can also refer in-city roads) for the country of interest
+    :param: highway_types: list of tags that are associated with the highway key such as primary, secondary, residential, road, etc. See Overpass QL documentation for more.
+    :param: country_code: string: Country ISO3166-1 alpha-3 code
+    :return: overpass query 
+    """
     
     query_highways = "\n".join(f'way["highway"={_type}](area.searchArea);' for _type in highway_types)
 
@@ -39,6 +52,12 @@ def country_ways_query(highway_types, country_code):
 
 
 def response_to_geometry(json_response):
+    
+    """
+    Method to transform json repsonse to geodataframe of ways
+    :param: json response of query result from overpass api interpreter
+    :return: geodataframe of ways
+    """
     ways = []
     geoms = []
     for element in json_response:
@@ -58,6 +77,13 @@ def response_to_geometry(json_response):
 
 
 def get_ways(highway_types, country_code):
+
+    """
+    Main method to get geodataframe of ways for a country of interest
+    :param: highway_types: list of tags that are associated with the highway key such as primary, secondary, residential, road, etc. See Overpass QL documentation for more.
+    :param: country_code: string: Country ISO3166-1 alpha-3 code
+    :return: geodataframe of ways
+    """
     overpass_query = country_ways_query(highway_types, country_code)
     response = osm_to_json(overpass_query)
     

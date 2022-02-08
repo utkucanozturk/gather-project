@@ -502,3 +502,12 @@ cython_debug/
 
 # other
 */download.py 
+
+# data files
+*.jpg
+*.png
+*.csv
+*.csv.gz
+*.zip
+*.tif
+*.pickle

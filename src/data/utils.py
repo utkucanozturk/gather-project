@@ -91,70 +91,47 @@ def save_map_image(map_, path, time_to_render = 5):
     img.save(path)
 
 
-def get_grid(gdf, number_of_tiles):
+def get_grid(gdf, tile_size, visualize = False):
 
     """
     Method to get the grid of tiles for the area covered by instances of a geodataframe
-    :param: gdf: geopandas geodataframe object 
-    :param: number_of_tiles: approximate number of tiles in each edge of the grid
+    :param: gdf: geopandas geodataframe object
+    :param: tile_size: size of the edge of each tile
     :return: geodataframe of tiles
     """
 
     print('Creating grid of tiles...')
 
+    # projection of the grid
+    crs = 'EPSG:3395'
+
+    gdf = gdf.to_crs(crs = crs)
+
     # total area for the grid
     xmin, ymin, xmax, ymax= gdf.total_bounds
-    # how many tiles across and down
-    n_cells = number_of_tiles
-    tile_size = (xmax-xmin)/n_cells
-    # projection of the grid
-    crs = "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"
+
+    tile_size = tile_size * 1000
+    
     # create the tiles in a loop
     grid_tiles = []
-    for x0 in np.arange(xmin, xmax+tile_size, tile_size ):
-        for y0 in np.arange(ymin, ymax+tile_size, tile_size):
+    for x0 in np.arange(xmin, xmax + tile_size, tile_size ):
+        for y0 in np.arange(ymin, ymax + tile_size, tile_size):
             # bounds
-            x1 = x0-tile_size
-            y1 = y0+tile_size
+            x1 = x0 - tile_size
+            y1 = y0 + tile_size
             grid_tiles.append(box(x0, y0, x1, y1)  )
-    tiles = gp.GeoDataFrame(grid_tiles, columns=['geometry'], crs=crs)
+    tiles = gp.GeoDataFrame(grid_tiles, columns=['geometry'], crs = crs)
 
-    print('Visualizing the grid...')
-    ax = gdf.plot(markersize=.1, figsize=(18, 12), color='red')
-    plt.autoscale(False)
-    tiles.plot(ax=ax, facecolor="none", edgecolor='green')
-    ax.axis("off")
+    tiles = gp.sjoin(tiles, gdf, how = 'inner', predicate='intersects')
+
+    if visualize:
+        print('Visualizing the grid...')
+        ax = gdf.plot(markersize=.1, figsize=(18, 12), color='indigo')
+        plt.autoscale(False)
+        tiles.plot(ax=ax, facecolor="none", edgecolor='lime')
+        ax.axis("off")
 
     print('Done!')
 
-    return tiles
-
-
-def get_polygon_area_km(geom_):
-
-    """
-    Method to get area of polygon in km^2
-    :param: geom_: shapely.geometry Polygon object with projection crs EPSG:4326
-    :return: area of each tile in km^2
-    """
-
-    assert geom_.type == 'Polygon', 'Input geometry should be `Polygon`!'
-
-    geom_area = ops.transform(
-        partial(
-            pyproj.transform,
-            pyproj.Proj(init='EPSG:4326'),
-            pyproj.Proj(
-                proj='aea',
-                lat_1=geom_.bounds[1],
-                lat_2=geom_.bounds[3]
-            )
-        ),
-        geom_)
-
-    # Print the area in km^2
-    print('Area of the polygon is ' + str(geom_area.area/1000) + ' km^2')
-
-    return geom_area.area/1000
-
+    return tiles.to_crs(crs = 'EPSG:4326')
 

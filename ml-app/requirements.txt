@@ -1,2 +1,0 @@
-sklearn
-seldon-core

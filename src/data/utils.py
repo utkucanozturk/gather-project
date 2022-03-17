@@ -2,11 +2,9 @@ import folium
 import ee
 import io
 from PIL import Image
-import pyproj    
-import shapely.ops as ops
 from shapely.geometry import box
-from functools import partial
 import matplotlib.pyplot as plt
+from IPython.display import display
 import numpy as np
 import geopandas as gp
 
@@ -91,7 +89,7 @@ def save_map_image(map_, path, time_to_render = 5):
     img.save(path)
 
 
-def get_grid(gdf, tile_size, visualize = False):
+def get_grid(gdf, tile_size, visualize = False, mapbox_token = None):
 
     """
     Method to get the grid of tiles for the area covered by instances of a geodataframe
@@ -124,14 +122,39 @@ def get_grid(gdf, tile_size, visualize = False):
 
     tiles = gp.sjoin(tiles, gdf, how = 'inner', predicate='intersects')
 
+    print('Done! Square grid with ' + str(len(tiles)) + ' tiles is created!')
+
+
+
+    tiles['tile_id'] = np.arange(0, len(tiles))
+    tiles = tiles.reset_index(drop=True)
+    tiles = tiles[['tile_id', 'geometry']]
+    tiles = tiles.to_crs(crs = 'EPSG:4326')
+
+    map_ = None
+    
     if visualize:
-        print('Visualizing the grid...')
-        ax = gdf.plot(markersize=.1, figsize=(18, 12), color='indigo')
-        plt.autoscale(False)
-        tiles.plot(ax=ax, facecolor="none", edgecolor='lime')
-        ax.axis("off")
+        if mapbox_token is not None:
+            print('Visualizing the grid...')
+            tileurl = 'https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.png?access_token=' + str(mapbox_token)
 
-    print('Done!')
+            bounds_ = tiles.total_bounds
+            x_cent, y_cent = (bounds_[0] + bounds_[2])/2, (bounds_[1] + bounds_[3])/2, 
 
-    return tiles.to_crs(crs = 'EPSG:4326')
+            # Define a map centered on the way
+            map_ = folium.Map(location=[y_cent, x_cent], zoom_start=13, tiles=tileurl, attr='Mapbox')
 
+            for _, r in tiles.iterrows():
+                # Without simplifying the representation of each borough,
+                # the map might not be displayed
+                sim_geo = gp.GeoSeries(r['geometry']).simplify(tolerance=0.001)
+                geo_j = sim_geo.to_json()
+                geo_j = folium.GeoJson(data=geo_j,
+                                    style_function=lambda x: {'fillColor': 'red'})
+                folium.Popup(str(r['tile_id'])).add_to(geo_j)
+                geo_j.add_to(map_)
+            print('Enjoy your interactive map! You can click on tile to display the tile number.')
+        else:
+            print('Grid tiles cannot be visualized on map. Please provide a mapbox access token!')
+
+    return tiles, map_

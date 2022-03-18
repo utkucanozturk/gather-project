@@ -269,7 +269,7 @@ def perform_cv(image_folder, model_names, model_getter, data_loader, n_splits=5,
                 df_results_per_image.loc[len(df_results_per_image)] = (
                     model_name,
                     data_loader.get_image_name_at_index(i),
-                    i,  iou[0][0][0], fold_number, TN, FP, FN, TP)
+                    i,  iou[0][0], fold_number, TN, FP, FN, TP)
                 df_results_per_image.to_pickle(
                     f"results/df_results_cv_all_modelsV4TestUnet.pickle")
 

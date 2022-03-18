@@ -9,7 +9,7 @@ Project with a purpose of completing the road network of the Antananarivo, Madag
 
 ## Gathering Image Data
 
-You can run the get_images notebook to collect the images for the area of your choice. To be able to run the notebook, you need a shapefile of the area of interest which will be read as geodataframe. Geodataframe will be used to determine the locations that we will gather the images of. Geodataframe/shapefile can be in projection of any coordinate reference system.
+You can run the [get_images]('./notebooks/get_images') notebook to collect the images for the area of your choice. To be able to run the notebook, you need a shapefile of the area of interest which will be read as geodataframe. Geodataframe will be used to determine the locations that we will gather the images of. Geodataframe/shapefile can be in projection of any coordinate reference system.
 
 You can simply follow the instructions/notes inside the notebook to create your own dataset. Please note that notebook makes calls to the [Mapbox Static Images API](https://docs.mapbox.com/api/maps/static-images/) which has [rate limits](https://docs.mapbox.com/api/overview/#rate-limits) that cap the number of requests you can make against an endpoint.
 
